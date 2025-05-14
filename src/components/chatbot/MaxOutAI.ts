@@ -175,7 +175,7 @@ export class MaxOutAI {
 
   private _selectExercises(focus: string, fitnessLevel: string, equipment: string[], goal: string): Exercise[] {
     // Filter exercises matching the focus and equipment
-    let matchingExercises = this.exercises.filter(e => 
+    const matchingExercises = this.exercises.filter(e => 
       e.focus.toLowerCase().includes(focus.toLowerCase()) &&
       (e.equipment.length === 0 || e.equipment.some(eq => equipment.includes(eq)))
     );
