@@ -1,138 +1,164 @@
-// src/components/chatbot/ChatTrainer.tsx
-import React, { useState, useEffect, useContext } from 'react';
-import MaxOutAI, { UserProfile, UserMetrics, WorkoutPlan, NutritionPlan } from './MaxOutAI';
-import { UserContext } from '../../context/UserContext'; // Assuming you have this
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, User as UserIcon, Bot, Trash2 } from 'lucide-react';
+import { useChat } from '../../context/ChatContext';
 
-// Example component structure
+/**
+ * ChatTrainer component provides an interface for users to interact with an AI fitness trainer.
+ * It includes a chat display, message input, and quick suggestion buttons.
+ */
 const ChatTrainer: React.FC = () => {
-  const [messages, setMessages] = useState<Array<{type: string, text: string}>>([]);
-  const [input, setInput] = useState('');
-  const [aiTrainer] = useState(new MaxOutAI());
-  const userContext = useContext(UserContext);
+  // Access chat context for messages and actions
+  const { messages, sendMessage, clearChat } = useChat();
   
-  // Add initial greeting
+  // State for managing the input field value
+  const [input, setInput] = useState('');
+  
+  // Ref for auto-scrolling to the bottom of the chat
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  /**
+   * Auto-scroll to bottom whenever messages update
+   * This ensures new messages are always visible
+   */
   useEffect(() => {
-    setMessages([
-      { 
-        type: 'bot', 
-        text: "Hi! I'm your MaxOut AI Trainer. I can help you with workout plans, nutrition advice, or motivation. What would you like help with today?" 
-      }
-    ]);
-  }, []);
-
-  // Handle user input
-  const handleSendMessage = () => {
-    if (!input.trim()) return;
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+  
+  /**
+   * Handles form submission for sending a new message
+   * @param {React.FormEvent} e - Form submission event
+   */
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // Add user message
-    const userMessage = { type: 'user', text: input };
-    setMessages(prev => [...prev, userMessage]);
+    // Don't send empty messages
+    if (input.trim() === '') return;
     
-    // Process the message
-    processUserMessage(input);
-    
-    // Clear input
+    // Send the message and clear input field
+    sendMessage(input);
     setInput('');
   };
-
-  // Process user message and generate AI response
-  const processUserMessage = (message: string) => {
-    const lowerMessage = message.toLowerCase();
-    let response: string;
-    
-    // Check what the user is asking for
-    if (lowerMessage.includes('workout') || lowerMessage.includes('exercise') || lowerMessage.includes('plan')) {
-      // Generate a workout plan based on user profile
-      const userProfile: UserProfile = {
-        fitness_level: (userContext?.user?.fitnessLevel || 'beginner') as 'beginner' | 'intermediate' | 'advanced',
-        days_per_week: userContext?.user?.daysPerWeek || 3,
-        available_equipment: userContext?.user?.equipment || [],
-        goal: (userContext?.user?.goal || 'general_fitness') as any,
-      };
-      
-      const workoutPlan = aiTrainer.generateWorkoutPlan(userProfile);
-      response = formatWorkoutPlanResponse(workoutPlan);
-    } 
-    else if (lowerMessage.includes('nutrition') || lowerMessage.includes('diet') || lowerMessage.includes('calories') || lowerMessage.includes('food')) {
-      // Generate nutrition advice
-      const userMetrics: UserMetrics = {
-        weight: userContext?.user?.weight || 70,
-        height: userContext?.user?.height || 170,
-        age: userContext?.user?.age || 30,
-        gender: (userContext?.user?.gender || 'male') as 'male' | 'female' | 'other',
-        activity_level: (userContext?.user?.activityLevel || 'moderate') as any,
-        goal: (userContext?.user?.nutritionGoal || 'maintain') as 'lose' | 'maintain' | 'gain',
-      };
-      
-      const nutritionPlan = aiTrainer.calculateNutrition(userMetrics);
-      response = formatNutritionResponse(nutritionPlan);
-    }
-    else if (lowerMessage.includes('motivat') || lowerMessage.includes('inspire') || lowerMessage.includes('encourage')) {
-      // Generate motivational message
-      response = aiTrainer.getMotivationalMessage();
-    }
-    else {
-      // Default response
-      response = "I can help you with workout plans, nutrition advice, or motivation. What would you like assistance with?";
-    }
-    
-    // Add AI response with a small delay to feel more natural
-    setTimeout(() => {
-      setMessages(prev => [...prev, { type: 'bot', text: response }]);
-    }, 500);
-  };
-
-  // Format workout plan into readable text
-  const formatWorkoutPlanResponse = (plan: WorkoutPlan): string => {
-    let response = "Here's your personalized workout plan:\n\n";
-    
-    for (const [day, workout] of Object.entries(plan)) {
-      response += `**${day} - ${workout.focus}**\n`;
-      
-      workout.exercises.forEach((exercise, index) => {
-        response += `${index + 1}. ${exercise.name}: ${exercise.sets} sets of ${exercise.reps} reps (Rest: ${exercise.rest})\n`;
-      });
-      
-      response += '\n';
-    }
-    
-    response += "How does this plan look? I can adjust it if needed!";
-    return response;
-  };
-
-  // Format nutrition plan into readable text
-  const formatNutritionResponse = (plan: NutritionPlan): string => {
-    return `Based on your profile, here's your nutrition plan:
-    
-**Daily Calorie Target:** ${plan.calories} calories
-
-**Macronutrient Breakdown:**
-- Protein: ${plan.macros.protein}g (${Math.round(plan.macros.protein * 4)} calories)
-- Carbs: ${plan.macros.carbs}g (${Math.round(plan.macros.carbs * 4)} calories)
-- Fat: ${plan.macros.fat}g (${Math.round(plan.macros.fat * 9)} calories)
-
-Would you like some meal suggestions based on this plan?`;
-  };
-
+  
   return (
-    <div className="chat-trainer-container">
-      <div className="messages-container">
-        {messages.map((msg, index) => (
-          <div key={index} className={`message ${msg.type}`}>
-            {msg.text}
+    <div className="pt-20 px-4 pb-10">
+      <div className="container mx-auto max-w-3xl">
+        {/* Page header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2 text-white">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">
+              AI Fitness Trainer
+            </span>
+          </h1>
+          <p className="text-blue-300">Chat with your personal fitness assistant</p>
+        </div>
+        
+        {/* Main chat container */}
+        <div className="bg-indigo-900/20 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg border border-indigo-500/20 flex flex-col h-[70vh]">
+          {/* Chat header with bot info and clear button */}
+          <div className="bg-indigo-800/50 p-4 border-b border-indigo-700 flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="bg-green-500/20 p-2 rounded-full mr-3">
+                <Bot className="text-green-400" size={20} />
+              </div>
+              <div>
+                <h3 className="font-bold text-white">Aki</h3>
+                <p className="text-xs text-blue-300">Virtual Fitness Trainer</p>
+              </div>
+            </div>
+            
+            {/* Clear chat button */}
+            <button 
+              onClick={clearChat}
+              className="text-blue-300 hover:text-red-400 transition"
+              title="Clear conversation"
+            >
+              <Trash2 size={18} />
+            </button>
           </div>
-        ))}
-      </div>
-      
-      <div className="input-container">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-          placeholder="Ask me about workouts, nutrition, or motivation..."
-        />
-        <button onClick={handleSendMessage}>Send</button>
+          
+          {/* Messages display area */}
+          <div className="flex-grow overflow-y-auto p-4 space-y-4">
+            {/* Map through all messages */}
+            {messages.map((message) => (
+              <div 
+                key={message.id} 
+                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                {/* Individual message bubble */}
+                <div 
+                  className={`max-w-[80%] rounded-xl p-3 ${
+                    message.sender === 'user'
+                      ? 'bg-indigo-700 text-white rounded-tr-none' // User message style
+                      : 'bg-indigo-900/50 border border-indigo-700 text-white rounded-tl-none' // Bot message style
+                  }`}
+                >
+                  {/* Message sender indicator */}
+                  <div className="flex items-center mb-1">
+                    {message.sender === 'bot' ? (
+                      <div className="bg-green-500/20 p-1 rounded-full mr-2">
+                        <Bot className="text-green-400" size={14} />
+                      </div>
+                    ) : (
+                      <div className="bg-blue-500/20 p-1 rounded-full mr-2">
+                        <UserIcon className="text-blue-400" size={14} />
+                      </div>
+                    )}
+                    <span className="text-xs text-blue-300">
+                      {message.sender === 'user' ? 'You' : 'Aki'}
+                    </span>
+                  </div>
+                  {/* Message text content */}
+                  <p>{message.text}</p>
+                </div>
+              </div>
+            ))}
+            {/* Empty div for auto-scrolling to bottom */}
+            <div ref={messagesEndRef} />
+          </div>
+          
+          {/* Message input form */}
+          <div className="bg-indigo-800/30 p-4 border-t border-indigo-700">
+            <form onSubmit={handleSubmit} className="flex">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask about workouts, nutrition, or motivation..."
+                className="flex-grow px-4 py-2 bg-indigo-900/50 border border-indigo-700 rounded-l-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+              />
+              {/* Send button */}
+              <button
+                type="submit"
+                className="px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 rounded-r-lg text-white hover:opacity-90 transition"
+              >
+                <Send size={18} />
+              </button>
+            </form>
+          </div>
+        </div>
+        
+        {/* Quick suggestion buttons */}
+        <div className="mt-6">
+          <h3 className="text-white font-semibold mb-3">Try asking about:</h3>
+          <div className="flex flex-wrap gap-2">
+            {[
+              "Best workout for beginners",
+              "How to track calories effectively", 
+              "Tips for weight loss", 
+              "How to stay motivated"
+            ].map((suggestion, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setInput(suggestion);
+                }}
+                className="px-3 py-2 bg-indigo-800/30 hover:bg-indigo-700/50 text-blue-300 rounded-lg text-sm transition"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
