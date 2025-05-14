@@ -3,7 +3,7 @@ import { Send, User as UserIcon, Bot, Trash2 } from 'lucide-react';
 import { useChat } from '../../context/ChatContext';
 import MaxOutAI, { UserProfile, UserMetrics } from './MaxOutAI';
 
-const maxOutAI = new MaxOutAI(); // Instantiate AI once
+const maxOutAI = new MaxOutAI(); // Initialize AI
 
 const ChatTrainer: React.FC = () => {
   const { messages, sendMessage, clearChat } = useChat();
@@ -19,11 +19,11 @@ const ChatTrainer: React.FC = () => {
     if (input.trim() === '') return;
 
     sendMessage(input); // User message
-    generateAIResponse(input); // AI reply
+    respondWithAI(input); // Bot reply
     setInput('');
   };
 
-  const generateAIResponse = (message: string) => {
+  const respondWithAI = (message: string) => {
     const lowerInput = message.toLowerCase();
     let response = "I'm not sure how to help with that yet.";
 
@@ -39,6 +39,7 @@ const ChatTrainer: React.FC = () => {
         ([day, details]) =>
           `${day} (${details.focus}): ${details.exercises.map(e => e.name).join(', ')}`
       ).join('\n');
+
     } else if (lowerInput.includes('nutrition') || lowerInput.includes('calories')) {
       const mockMetrics: UserMetrics = {
         weight: 70,
@@ -49,12 +50,13 @@ const ChatTrainer: React.FC = () => {
         goal: 'maintain',
       };
       const nutrition = maxOutAI.calculateNutrition(mockMetrics);
-      response = `Your estimated daily needs: ${nutrition.calories} kcal\nProtein: ${nutrition.macros.protein}g, Fat: ${nutrition.macros.fat}g, Carbs: ${nutrition.macros.carbs}g`;
+      response = `Estimated daily calories: ${nutrition.calories} kcal\nProtein: ${nutrition.macros.protein}g\nFat: ${nutrition.macros.fat}g\nCarbs: ${nutrition.macros.carbs}g`;
+
     } else if (lowerInput.includes('motivation') || lowerInput.includes('motivated')) {
       response = maxOutAI.getMotivationalMessage('general');
     }
 
-    sendMessage(response); // Bot reply
+    sendMessage(response); // Bot message
   };
 
   return (
