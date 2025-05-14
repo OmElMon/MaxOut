@@ -307,7 +307,7 @@ const ProfilePage: React.FC = () => {
             {/* App version and copyright */}
             <div className="text-sm text-blue-300 mt-6">
               <p>App Version: 1.0.0</p>
-              <p>© 2025 FITQUEST. All rights reserved.</p>
+              <p>© 2025 MaxOut. All rights reserved.</p>
             </div>
           </div>
         </div>
