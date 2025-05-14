@@ -67,8 +67,8 @@ const Header: React.FC = () => {
         <Link to="/" className="flex items-center space-x-2">
           <Dumbbell className="text-pink-500" size={28} />
           <span className="font-bold text-xl text-white tracking-wider">
-            <span className="text-pink-400">FIT</span>
-            <span className="text-blue-400">QUEST</span>
+            <span className="text-pink-400">Max</span>
+            <span className="text-blue-400">Out</span>
           </span>
         </Link>
 
