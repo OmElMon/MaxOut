@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User as UserIcon, Bot, Trash2 } from 'lucide-react';
+import { User as UserIcon, Bot, Trash2 } from 'lucide-react'; // Removed unused 'Send'
 import { useChat } from '../../context/ChatContext';
 import MaxOutAI, { UserProfile, UserMetrics } from './MaxOutAI';
 
-const maxOutAI = new MaxOutAI(); // Initialize AI
+const maxOutAI = new MaxOutAI();
 
 const ChatTrainer: React.FC = () => {
   const { messages, sendMessage, clearChat } = useChat();
@@ -18,8 +18,8 @@ const ChatTrainer: React.FC = () => {
     e.preventDefault();
     if (input.trim() === '') return;
 
-    sendMessage(input); // User message
-    respondWithAI(input); // Bot reply
+    sendMessage(input, false); // Disable auto bot response
+    respondWithAI(input);
     setInput('');
   };
 
@@ -39,7 +39,6 @@ const ChatTrainer: React.FC = () => {
         ([day, details]) =>
           `${day} (${details.focus}): ${details.exercises.map(e => e.name).join(', ')}`
       ).join('\n');
-
     } else if (lowerInput.includes('nutrition') || lowerInput.includes('calories')) {
       const mockMetrics: UserMetrics = {
         weight: 70,
@@ -51,12 +50,11 @@ const ChatTrainer: React.FC = () => {
       };
       const nutrition = maxOutAI.calculateNutrition(mockMetrics);
       response = `Estimated daily calories: ${nutrition.calories} kcal\nProtein: ${nutrition.macros.protein}g\nFat: ${nutrition.macros.fat}g\nCarbs: ${nutrition.macros.carbs}g`;
-
     } else if (lowerInput.includes('motivation') || lowerInput.includes('motivated')) {
       response = maxOutAI.getMotivationalMessage('general');
     }
 
-    sendMessage(response); // Bot message
+    sendMessage(response); // Send bot message
   };
 
   return (
@@ -138,7 +136,7 @@ const ChatTrainer: React.FC = () => {
                 type="submit"
                 className="px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 rounded-r-lg text-white hover:opacity-90 transition"
               >
-                <Send size={18} />
+                Send
               </button>
             </form>
           </div>
