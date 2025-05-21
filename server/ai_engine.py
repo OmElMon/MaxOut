@@ -38,19 +38,28 @@ class MaxOutAI:
         level_map = {"beginner": 4, "intermediate": 6, "advanced": 8}
         target_count = level_map.get(fitness_level, 5)
 
-        # Filter exercises by focus and equipment
-        filtered = [
-            ex for ex in self.exercise_db
-            if focus.lower() in ex["focus"].lower()
-            and (not ex["equipment"] or any(eq in equipment for eq in ex["equipment"]))
-        ]
+        equipment_lower = [e.lower() for e in equipment]
+
+        filtered = []
+        for ex in self.exercise_db:
+            focus_match = focus.lower() in ex.muscle_groups.lower()
+
+            equipment_list = [e.strip().lower() for e in ex.equipment.split(',')] if ex.equipment else []
+            equipment_match = not equipment_list or any(eq in equipment_lower for eq in equipment_list)
+
+            if focus_match and equipment_match:
+                filtered.append({
+                    "name": ex.name,
+                    "description": ex.description,
+                    "equipment": ex.equipment,
+                    "difficulty": ex.difficulty
+                })
 
         return random.sample(filtered, min(len(filtered), target_count))
 
     # --- PROGRESS TRACKING METHODS ---
 
     def log_workout(self, user_id, workout_data):
-        # Placeholder for DB integration
         if self.db:
             self.db.insert_workout(user_id, workout_data)
 
@@ -102,7 +111,6 @@ class MaxOutAI:
         return tdee + goals.get(goal, 0)
 
     def _calculate_macros(self, calories, goal):
-        # Example: 30% protein, 25% fat, 45% carbs
         return {
             'protein': round((calories * 0.3) / 4),
             'fat': round((calories * 0.25) / 9),
