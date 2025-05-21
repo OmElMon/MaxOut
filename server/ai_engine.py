@@ -42,20 +42,23 @@ class MaxOutAI:
 
         filtered = []
         for ex in self.exercise_db:
-            focus_match = focus.lower() in ex.muscle_groups.lower()
+            if not hasattr(ex, "muscle_groups") or not hasattr(ex, "equipment"):
+                continue
 
-            equipment_list = [e.strip().lower() for e in ex.equipment.split(',')] if ex.equipment else []
-            equipment_match = not equipment_list or any(eq in equipment_lower for eq in equipment_list)
+        focus_match = focus.lower() in ex.muscle_groups.lower()
 
-            if focus_match and equipment_match:
-                filtered.append({
-                    "name": ex.name,
-                    "description": ex.description,
-                    "equipment": ex.equipment,
-                    "difficulty": ex.difficulty
-                })
+        equipment_list = [e.strip().lower() for e in ex.equipment.split(',')] if ex.equipment else []
+        equipment_match = not equipment_list or any(eq in equipment_lower for eq in equipment_list)
 
-        return random.sample(filtered, min(len(filtered), target_count))
+        if focus_match and equipment_match:
+            filtered.append({
+                "name": ex.name,
+                "description": ex.description,
+                "equipment": ex.equipment,
+                "difficulty": ex.difficulty
+            })
+
+            return random.sample(filtered, min(len(filtered), target_count))
 
     # --- PROGRESS TRACKING METHODS ---
 
