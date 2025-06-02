@@ -37,28 +37,40 @@ class MaxOutAI:
     def _generate_day_workout(self, focus, fitness_level, equipment, duration):
         level_map = {"beginner": 4, "intermediate": 6, "advanced": 8}
         target_count = level_map.get(fitness_level, 5)
-
         equipment_lower = [e.lower() for e in equipment]
+
+        print(f"\n--- DEBUG ---")
+        print(f"Requested Focus: {focus}")
+        print(f"User Equipment: {equipment_lower}")
+        print(f"Total Exercises in DB: {len(self.exercise_db)}")
 
         filtered = []
         for ex in self.exercise_db:
             if not hasattr(ex, "muscle_groups") or not hasattr(ex, "equipment"):
                 continue
+            if not ex.muscle_groups:
+                continue
 
-        focus_match = focus.lower() in ex.muscle_groups.lower()
+            print(f"\nChecking Exercise: {ex.name}")
+            print(f" -> Muscle Groups: {ex.muscle_groups}")
+            print(f" -> Equipment: {ex.equipment}")
 
-        equipment_list = [e.strip().lower() for e in ex.equipment.split(',')] if ex.equipment else []
-        equipment_match = not equipment_list or any(eq in equipment_lower for eq in equipment_list)
+            focus_match = focus.lower() in ex.muscle_groups.lower()
+            equipment_list = [e.strip().lower() for e in ex.equipment.split(',')] if ex.equipment else []
+            equipment_match = not equipment_list or any(eq in equipment_lower for eq in equipment_list)
 
-        if focus_match and equipment_match:
-            filtered.append({
-                "name": ex.name,
-                "description": ex.description,
-                "equipment": ex.equipment,
-                "difficulty": ex.difficulty
-            })
+            print(f" -> Match? Focus: {focus_match}, Equipment: {equipment_match}")
 
-            return random.sample(filtered, min(len(filtered), target_count))
+            if focus_match and equipment_match:
+                filtered.append({
+                    "name": ex.name,
+                    "description": ex.description,
+                    "equipment": ex.equipment,
+                    "difficulty": ex.difficulty
+                })
+
+        print(f"\nFiltered Exercises: {len(filtered)}")
+        return random.sample(filtered, min(len(filtered), target_count)) if filtered else []
 
     # --- PROGRESS TRACKING METHODS ---
 
