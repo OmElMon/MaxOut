@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from .ai_engine import MaxOutAI
 from .database import get_db_session, Exercise
+from .models import WorkoutLog
 
 # Initialize DB and AI
 api = Blueprint('api', __name__)
@@ -45,13 +46,36 @@ def log_progress():
 
 @api.route('/progress/stats/<user_id>', methods=['GET'])
 def get_stats(user_id):
-    metric = request.args.get('metric', 'strength')
-    time_range = request.args.get('time_range', '30days')
     try:
-        stats = ai_engine.get_progress(user_id, metric, time_range)
-        return jsonify({"success": True, "stats": stats})
+        session = get_db_session()
+        
+        logs = session.query(WorkoutLog).filter_by(user_id=user_id).all()
+        total_sessions = len(logs)
+        total_duration = sum(log.duration for log in logs) if logs else 0
+        avg_duration = total_duration / total_sessions if total_sessions > 0 else 0
+
+        # Count exercise frequency
+        exercise_counts = {}
+        for log in logs:
+            for ex_log in log.exercises:
+                exercise = session.query(Exercise).get(ex_log.exercise_id)
+                if exercise:
+                    name = exercise.name
+                    exercise_counts[name] = exercise_counts.get(name, 0) + 1
+
+        most_common = sorted(exercise_counts.items(), key=lambda x: x[1], reverse=True)
+
+        return jsonify({
+            "success": True,
+            "stats": {
+                "total_workouts": total_sessions,
+                "average_duration": round(avg_duration, 2),
+                "most_frequent_exercises": most_common
+            }
+        })
+
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 400
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @api.route('/motivation', methods=['GET'])
 def get_motivation():

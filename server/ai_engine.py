@@ -75,8 +75,37 @@ class MaxOutAI:
     # --- PROGRESS TRACKING METHODS ---
 
     def log_workout(self, user_id, workout_data):
-        if self.db:
-            self.db.insert_workout(user_id, workout_data)
+        if not self.db:
+            raise ValueError("Database connection not available")
+
+        from .models import WorkoutLog, ExerciseLog, Exercise
+
+    # Create a new workout log
+        workout_log = WorkoutLog(
+            user_id=user_id,
+            duration=workout_data.get('duration', 0),
+            notes=workout_data.get('notes', '')
+        )
+        self.db.add(workout_log)
+        self.db.flush()  # So the workout_log gets an ID
+
+    # Add individual exercise logs
+        for entry in workout_data.get('exercises', []):
+        # Optionally verify the exercise exists
+            exercise = self.db.query(Exercise).filter_by(name=entry['name']).first()
+            if not exercise:
+                continue  # Skip invalid exercises
+
+            exercise_log = ExerciseLog(
+                workout_id=workout_log.id,
+                exercise_id=exercise.id,
+                sets=entry.get('sets', 3),
+                reps=entry.get('reps', '10'),
+                weight=entry.get('weight', 'Bodyweight')
+            )
+            self.db.add(exercise_log)
+
+        self.db.commit()
 
     def get_progress(self, user_id, metric, time_range):
         if self.db:
