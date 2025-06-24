@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from ai_engine import MaxOutAI
 from database import get_db_session, Exercise
-from .models import WorkoutLog
+from models import WorkoutLog
 
 # Initialize DB and AI
 api = Blueprint('api', __name__)
