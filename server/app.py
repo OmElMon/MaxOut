@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from routes import api
-from server.database import init_db, seed_exercises
+from database import init_db, seed_exercises
 
 def create_app():
     app = Flask(__name__)
