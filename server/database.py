@@ -1,7 +1,7 @@
 # server/database.py
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from .models import Base, Exercise
+from models import Base, Exercise
 
 # Database connection
 DB_URI = "sqlite:///maxout.db"
